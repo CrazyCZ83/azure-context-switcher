@@ -3,8 +3,9 @@
 # Function to display usage information
 usage() {
     echo "Usage:"
-    echo "  $0               - List all Azure subscriptions (Name and ID)"
+    echo "  $0               - Show current active subscription"
     echo "  $0 -s <sub_id>   - Switch to the specified subscription"
+    echo "  $0 -l            - List all Azure subscriptions"
     echo "  $0 <search_term> - Search subscriptions by name or ID"
     exit 1
 }
@@ -14,8 +15,8 @@ search_subscriptions() {
     local search_term="$1"
     echo "Searching for subscriptions matching: $search_term"
     
-    # Search using JMESPath query to filter subscriptions and show only Name and ID
-    az account list --query "[?contains(name, '${search_term}') || contains(id, '${search_term}')].{Name:name, SubscriptionId:id}" --output table
+    # Search using JMESPath query to filter subscriptions and show only Name and ID with column names
+    az account list --query "[?contains(name, '${search_term}') || contains(id, '${search_term}')]" --output table --query "[].{Name:name, SubscriptionId:id}"
 }
 
 # Check if Azure CLI is installed
@@ -32,7 +33,11 @@ fi
 
 # Main script logic
 if [ $# -eq 0 ]; then
-    # No parameters: List subscriptions with Name and ID
+    # No parameters: Show current active subscription
+    echo "Current Active Subscription:"
+    az account show --query "{Name:name, Id:id, TenantId:tenantId}" --output table
+elif [ "$1" == "-l" ]; then
+    # List all subscriptions with Name and ID
     echo "Azure Subscriptions (Name and ID):"
     az account list --query "[].{Name:name, SubscriptionId:id}" --output table
 elif [ "$1" == "-s" ]; then
